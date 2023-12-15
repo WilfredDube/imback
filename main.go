@@ -1,15 +1,28 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/WilfredDube/imback/handlers"
+	"github.com/WilfredDube/imback/middleware"
+	"github.com/WilfredDube/imback/service"
+	"github.com/gin-gonic/gin"
+)
+
+var (
+	videoService = service.New()
+	videoHandler = handlers.New(videoService)
+)
 
 func main() {
-	router := gin.Default()
+	server := gin.Default()
+	server.Use(gin.Recovery(), middleware.Logger(), middleware.BasicAuth())
 
-	router.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "hello world",
-		})
+	server.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(200, videoHandler.FindAll())
 	})
 
-	router.Run()
+	server.POST("/videos", func(ctx *gin.Context) {
+		videoHandler.Save(ctx)
+	})
+
+	server.Run(":4000")
 }
